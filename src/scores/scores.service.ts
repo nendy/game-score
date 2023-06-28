@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { CreateScoreDto } from './dto/create-score.dto';
-import { UpdateScoreDto } from './dto/update-score.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Score } from './entities/score.entity';
@@ -27,15 +26,8 @@ export class ScoresService {
     return this.scoreRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} score`;
+  getLeader(): Promise<Score[]> {
+    return this.scoreRepository.createQueryBuilder().orderBy("score", "DESC").limit(10).getMany();
   }
 
-  update(id: number, updateScoreDto: UpdateScoreDto) {
-    return `This action updates a #${id} score`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} score`;
-  }
 }

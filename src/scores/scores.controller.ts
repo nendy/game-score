@@ -42,10 +42,18 @@ export class ScoresController {
     );
   }
 
-  @UseGuards(AuthGuard)
   @Get('leaderboard')
-  getLeaderBoard(@Req() {user}) {
-    // coming soon
-    return this.scoresService.findAll();
+  getLeaderBoard() {
+    return from(this.scoresService.getLeader()).pipe(
+      map((res) => ({
+        status: HttpStatus.OK,
+        message: 'Leaderboard retrieved successful',
+        data: res,
+      })),
+      catchError((err) => of({
+        status: HttpStatus.PRECONDITION_FAILED,
+        message: err.message,
+      })),
+    );
   }
 }
