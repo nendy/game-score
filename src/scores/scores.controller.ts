@@ -1,37 +1,51 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req, HttpStatus, UnauthorizedException } from '@nestjs/common';
 import { ScoresService } from './scores.service';
 import { CreateScoreDto } from './dto/create-score.dto';
-import { UpdateScoreDto } from './dto/update-score.dto';
 import { AuthGuard } from '../auth/auth.guard';
+import { catchError, from, map, of } from 'rxjs';
 
-@Controller('scores')
+@Controller()
 export class ScoresController {
   constructor(private readonly scoresService: ScoresService) {}
 
   @UseGuards(AuthGuard)
-  @Post()
-  create(@Body() createScoreDto: CreateScoreDto, @Req() {user}) {
-    return this.scoresService.create(createScoreDto);
+  @Post('scores')
+  create(@Body() {name, score}: CreateScoreDto, @Req() {user}) {
+    if(user.roles?.indexOf('admin') === -1 && user.name != name) throw new UnauthorizedException();
+    return from(this.scoresService.create({name, score})).pipe(
+      map((res) => ({
+        status: HttpStatus.OK,
+        message: 'Score created successful',
+        data: res,
+      })),
+      catchError((err) => of({
+        status: HttpStatus.PRECONDITION_FAILED,
+        message: err.message,
+      })),
+    );
   }
 
   @UseGuards(AuthGuard)
-  @Get()
+  @Get('scores')
   findAll(@Req() {user}) {
+    if(user.roles?.indexOf('admin') === -1) throw new UnauthorizedException();
+    return from(this.scoresService.findAll()).pipe(
+      map((res) => ({
+        status: HttpStatus.OK,
+        message: 'Scores retrieved successful',
+        data: res,
+      })),
+      catchError((err) => of({
+        status: HttpStatus.PRECONDITION_FAILED,
+        message: err.message,
+      })),
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('leaderboard')
+  getLeaderBoard(@Req() {user}) {
+    // coming soon
     return this.scoresService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.scoresService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateScoreDto: UpdateScoreDto) {
-    return this.scoresService.update(+id, updateScoreDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.scoresService.remove(+id);
   }
 }

@@ -24,7 +24,7 @@ export class AuthService {
       throw new Error('Inactive user');
     }
 
-    const payload = { sub: user.id, email: user.email, roles: user.roles };
+    const payload = { sub: user.id, email: user.email, name: user.name, roles: user.roles };
     return {
       access_token: await this.jwtService.signAsync(payload),
     };
