@@ -3,14 +3,15 @@ version: "3"
 services:
   app:
     container_name: app
+    depends_on:
+      - db
     build: .
     env_file:
       - .env
+    environment:
+      DB_HOST: db
     ports:
       - 3000:3000
-    volumes:
-      - .:/usr/src/app
-      - /usr/src/app/node_modules
 
 
   db:
@@ -24,3 +25,5 @@ services:
       MYSQL_DATABASE: ${DB_NAME}
     ports:
       - 3306:3306
+    volumes:
+      - ./mysql:/var/lib/mysql

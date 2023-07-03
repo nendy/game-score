@@ -1,8 +1,16 @@
 FROM node:16.20.1-alpine
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
-COPY package-lock.json package.json ./
-RUN npm install
-COPY . .
+WORKDIR /app
+COPY tsconfig*.json ./
+COPY package*.json ./
+RUN npm ci
+COPY src/ src/
+RUN npm run build
+
+FROM node:16.20.1-alpine as production
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY --from=0 /app/dist/ dist/
+
 EXPOSE 3000
-CMD [ "npm", "run", "start:dev" ]
+CMD [ "node", "dist/main.js" ]
